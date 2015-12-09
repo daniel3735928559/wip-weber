@@ -60,10 +60,10 @@ One attempt at a cryptosystem based on a hard problem is one based on
 the "knapsack problem": "Given a set S = {a_1, ..., a_n} and a target
 x, find a subset of S whose elements add up to x."  In one
 cryptosystem based on this, the private key is a random r and a set S
-whose elements are "superincreasing"--that is, `a_{i+1} > a_1 + ... +
+whose elements are "superincreasing"--that is, `a_{i+1} &gt; a_1 + ... +
 a_i` for all i.  (Solving the knapsack problems for superincreasing
 sets is easily accomplished by the greedy algorithm.)  The public key
-is a modulus m > a_n and the set `rS = {ra_i mod m : i = 1..n}`.  Then
+is a modulus m &gt; a_n and the set `rS = {ra_i mod m : i = 1..n}`.  Then
 it is easy to encode a message consisting of bits b_1, ..., b_n as the
 number sum_i b_i ra_i mod m.  To decode the message, someone knowing
 the private key can just multiply by 1/r mod m and solve the
@@ -94,7 +94,7 @@ The LLL algorithm solves the SVP within a factor of 2^{(n-1)/2}.  That
 is, if l is the length of the actual shortest vector, then LLL will in
 polynomial time return a vector of length at most 2^{(n-1)/2} l.  (An
 improvement due to Schnorr returns a vector of length at most
-(1+epsilon)^n l for any chosen epsilon > 0.)
+(1+epsilon)^n l for any chosen epsilon &gt; 0.)
 
 So once again, it is the case that some lattices have easier solutions
 to these "probably hard in the worst case" problems than others.
@@ -120,7 +120,7 @@ instance of the problem implies the ability to polynomially
 approximate SIVP in the worst case.
 
 Specifically, Ajtai says for constants A, B, and given n, to pick an m
-> A*n*log(n), and q = n^B.  Then random n-dimensional vectors v_1,
+&gt; A*n*log(n), and q = n^B.  Then random n-dimensional vectors v_1,
 ..., v_m with integer coordinates chosen uniformly from [0,q-1]
 determine a so-called q-ary lattice (a lattice where if two vectors
 are congruent mod q then they are either both in the lattice or both
