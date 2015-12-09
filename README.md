@@ -146,9 +146,9 @@ interesting and makes me kind of nervous), but point 2 bears some
 remarks.
 
 Micciancio proved a similar result to Ajtai except restricting to only
-cyclic lattices: that is, lattices given by taking a A*log(n)
+cyclic lattices: that is, lattices given by taking a A log(n)
 n-dimensional vectors and cycling their coordinates around for m =
-A*n*log(n) vectors in total.  This requires only nlog(n) storage,
+A n log(n) vectors in total.  This requires only nlog(n) storage,
 rather than n^2, which is much better.
 
 However, cyclic lattices no longer have the property that they are
