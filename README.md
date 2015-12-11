@@ -458,11 +458,15 @@ algebra, since it is piece-wise by some divisibility conditions, but
 it does seem somewhat abstract.
 
 * Is it possible that simply plugging X^48 into the minimal
-polynomials we have computed and then factoring will always give the
-answer?
+  polynomials we have computed and then factoring will always give the
+  answer?
 
 * Will we have to reconstruct the f using whatever trickery gave rise
-to this f?  Is it possible that when we do so, the particular 48th
-root of unity (if indeed that's all there is to it) gives rise to an
-interesting minimal polynomial that is non-trivially related to the
-original?
+  to this f?  Is it possible that when we do so, the particular 48th
+  root of unity (if indeed that's all there is to it) gives rise to an
+  interesting minimal polynomial that is non-trivially related to the
+  original?
+
+* We're taking 2nd and 24th and 48th roots all over the place.  Is it
+  possible that a principled, consistent choice of these would make
+  the definition of f fall out more naturally?
