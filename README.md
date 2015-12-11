@@ -398,3 +398,71 @@ which agrees with our computation using the earlier method:
 mp(-31)
 x^3 + (-2.22044604925031e-16 - 2.22044604925031e-16*I)*x^2 + (1.00000000000000 + 3.33066907387547e-16*I)*x - 1.00000000000000 - 1.66533453693773e-16*I
 ```
+
+### 20151210 Exploring the 48th root:
+
+In the above example, it is important that we took f(t) and not just
+f2(t), since f is the thing that is SL_2(Z)-invariant.  We do not have
+an analogous f, at least not automatically, for the 48th roots of the
+omega_i, but if we naively suppose that everything will be the same
+except square-rooted, then we of course get the obvious answer:
+
+```
+def f2s(t, prec=100):
+    q = e^(2*pi*I*t)
+    ans = (2^(1/4))*q^(1/48)
+    for n in range(1,prec):
+        ans = ans * (1+q^n)^(1/2)
+    return ans
+d = -31
+a = 1
+b = 1
+c = (1-d)/4
+z = e^(2*pi*I/96)
+a = N((-1)^((d-1)/16) * z^(b*(a-c+a*a*c)) * f2s((-1+sqrt(d))/2), 100)
+from sage.libs.fplll.fplll import FP_LLL
+deg=20
+n=1000000
+M = []
+for i in range(deg+1):
+    M.append([1 if x == i else 0 for x in range(deg+1)]+[int(n*(a^i)[0]+.5),int(n*(a^i)[1]+.5)])
+M = matrix(M)
+F=FP_LLL(M)
+F.LLL()
+l=F._sage_()[0][:-2]
+
+R = ZZ['X']
+X=R.gen()
+fx = 0
+for i in range(len(l)):
+    fx += X^i * l[i]
+fx(a)
+fx.factor()
+```
+
+with output
+
+```
+-7.8886090522101180541172856528e-31 + 3.9043880552725101488619153979e-31*I
+X^6 + X^2 - 1
+```
+
+However, whatever the actual f is, we expect that it should at worst
+be a 96th root of unity times f2s(t), probably.  And in particular its
+96th power should be the same as the 48th power of f(t).  at minimum,
+then, it should be a factor of Y^3 + Y - 1, where Y = X^48
+
+A few questions come out of this: Where did this bizzare formula for f
+constructed out of f0, f1, and f2 come from?  This isn't quite linear
+algebra, since it is piece-wise by some divisibility conditions, but
+it does seem somewhat abstract.
+
+* Is it possible that simply plugging X^48 into the minimal
+polynomials we have computed and then factoring will always give the
+answer?
+
+* Will we have to reconstruct the f using whatever trickery gave rise
+to this f?  Is it possible that when we do so, the particular 48th
+root of unity (if indeed that's all there is to it) gives rise to an
+interesting minimal polynomial that is non-trivially related to the
+original?
