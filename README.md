@@ -9,7 +9,7 @@ eventually bringing this file up to the current state of my knowledge.
 Thereafter, I'll try to use it as a place to store sanitised versions
 of my notes.
 
-New entries will be added to the end of this file.
+New entries will be added to the end of this file.  
 
 ### 20151209 Recap of problem context and statement:
 
@@ -244,6 +244,7 @@ def fq(a, b, c, d, prec=100):
 def mp(d, prec=100):
     l = BinaryQF_reduced_representatives(d)
     R = PolynomialRing(CC, 'x')
+    x = R.gen()
     ans = R(1)
     for Q in l:
         ans *= x - N(fq(Q[0], Q[1], Q[2], d, prec))
@@ -273,3 +274,127 @@ question, then is whether omega_2^(1/48)((d+sqrt d)/2) generates
 the Hilbert class field.  Note that Phi_0^0(48) is no longer a
 congruence subgroup.
 
+### 20151210 LLL and minimal polynomials
+
+Given a complex number a = x+yi, where say x and y are rational
+approximations (perhaps with large height) to the actual values, we
+would like to get a decent guess at the minimal polynomial of a.
+
+That is, we want an integer dependence between 1, a, a^2, a^3, ... up
+to some chosen a^d.  It does not matter terribly if the d we use is
+not minimal: If we come out with a polynomial that annihilates a, then
+we can factor it and plug a into the irreducible factors of that
+polynomial to work out the true minimal polynomial.
+
+One approach, then, would be to construct the d+1 vectors:
+
+```
+(1, 0, 0, ..., 0, 1, 0)
+(0, 1, 0, ..., 0, Re(a), Im(a))
+(0, 0, 1, ..., 0, Re(a^2), Im(a^2))
+(0, 0, 0, ..., 1, Re(a^d), Im(a^d))
+```
+
+and using LLL to identify an integer combination of these that is
+small.  There is a problem, however: LLL will (relatively) quickly
+give us a vector within 2^((dim-1)/2) of the shortest.  It could do
+this by making the last two components very small, or it could do this
+by making the first components small and just vaguely keeping the last
+components at a moderate size.  For an extreme example, the integer
+linear combination of these vectors just given by taking the first
+one: (1, 0, 0, ..., 0, 1, 0) has length 2^(1/(d+2)).  This is easily
+within 2^((dim-1)/2) = 2^((d+1)/2) of 0, let alone whatever the
+shortest vector happens to be.
+
+To correct for this, we have to really disincentivise the last two
+components by saying, in effect "if your integer combination doesn't
+bring the last two components really close to 0, then they're going to
+end up being ginormous."  We can do this my multiplying these last two
+components by some large n, such as n = 10^10.  The point is that now,
+the integer combination will give
+
+(c_0, ..., c_d, X, Y)
+
+where X = n*Re(c_0 + c_1 a + ... + c_d a^d) and Y is n times the
+imaginary part.  So for X and Y to be decently small, the value of
+that polynomial had better be within 1/n of "decently small".  In
+particular, if n >> 2^((d+1)/2), then we should have some expectation
+that the polynomial should give values very close to 0.
+
+(As a note, there are papers that claim better answers than LLL for
+this "integer relation" problem.  For example, Schnorr, or [this
+paper](http://arxiv.org/pdf/1001.0649.pdf).  LLL is easy to
+understand, implemented in Sage, and can be made to work for our
+purposes without having to wait noticeably long, so we'll see how far
+we can take it without having to resort to something more
+sophisticated.)
+
+### 20151210 Running LLL on an example:
+
+Note that one of the quadratic forms is always t = [1, 1, (1-d)/4] =
+(-1 + sqrt(d))/2.
+
+Supposing d = 1 mod 8, f(t) = (-1)^((d-1)/8) zeta^(b(a-c+a^2 c)) f_2(t).
+
+We can compute this in Sage for d = -31 with code like:
+
+```
+d = -31
+a = 1
+b = 1
+c = (1-d)/4
+z = e^(2*pi*I/48)
+a = N((-1)^((d-1)/8) * z^(b*(a-c+a*a*c)) * f2((-1+sqrt(d))/2), 100)
+```
+
+At this point, we would like to apply LLL as described above to
+compute the minimal polynomial.  We start by picking n and a degree,
+and then we build our matrix M:
+
+```
+deg=10
+n=1000000
+M = []
+for i in range(deg+1):
+    M.append([1 if x == i else 0 for x in range(deg+1)]+[int(n*(a^i)[0]+.5),int(n*(a^i)[1]+.5)])
+M = matrix(M)
+```
+
+From here, getting Sage to run LLL is just a matter of calling the
+right function (and then stripping off the last two elements, which
+should represent the real and imaginary parts of the value of the
+polynomial whose coefficients are the rest of the coefficients:
+
+```
+from sage.libs.fplll.fplll import FP_LLL
+F=FP_LLL(M)
+F.LLL()
+l=F._sage_()[0][:-2]
+```
+
+Now l is an array of what ought to be the coefficients of a polynomial
+that annihilates a.  We can do some massaging to write this down: 
+
+```
+R = ZZ['X']
+X=R.gen()
+fx = 0
+for i in range(len(l)):
+    fx += X^i * l[i]
+fx(a)
+fx.factor()
+```
+
+Giving the output:
+
+```
+-7.8886090522101180541172856528e-31 + 2.3633407327042948872495641100e-31*I
+X^3 + X - 1
+```
+
+which agrees with our computation using the earlier method: 
+
+```
+mp(-31)
+x^3 + (-2.22044604925031e-16 - 2.22044604925031e-16*I)*x^2 + (1.00000000000000 + 3.33066907387547e-16*I)*x - 1.00000000000000 - 1.66533453693773e-16*I
+```
