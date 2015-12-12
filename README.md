@@ -567,8 +567,15 @@ try_all_f(-7,20,100000)
 ```
 
 In particular, which appears to be happening is that x^16 - x^8 + 1
-and x^16 - x^12 - x^8 - 2x^4 + 4 kill f2s(-1+sqrt(-7)/2) and
-f1s(-1+sqrt(-7)/2) respectively.
+and x^16 - x^12 - x^8 - 2x^4 + 4 very convincingly kill
+f2s(-1+sqrt(-7)/2) and f1s(-1+sqrt(-7)/2) respectively.
+
+But if we expect f1s^2 = f1 and f2s^2 = f2, then since we know
+(referring to Zagier and Yui again or just computing mp(-7) as
+earlier) that x+1 is actually what kills f, we would expect the
+polynomial we get to divide x^2 + 1.  In practice, we don't even see
+x^2+1 as a factor of any of these polynomials.  Possibly a coding
+error has taken place.  Will investigate further.  
 
 ### 20151211 Shimura Reciprocity
 
@@ -576,4 +583,5 @@ Apparently Alice Gee, in [this
 paper](https://www.math.leidenuniv.nl/scripties/AliceGee.pdf),
 understands the construction in a principled way and can prove things
 about it using Shimura reciprocity.  I don't know what this theorem
-is, but the paper is added to the reading list.
+is, but the paper is added to the reading list to investigate further.
+Theme of the day I guess.
