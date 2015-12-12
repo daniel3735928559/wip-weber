@@ -470,3 +470,110 @@ it does seem somewhat abstract.
 * We're taking 2nd and 24th and 48th roots all over the place.  Is it
   possible that a principled, consistent choice of these would make
   the definition of f fall out more naturally?
+
+### 20151211 Attempting minimal polynomials again--brute force
+
+The role that f plays for f0, f1, f2, something else (let us call it
+g) may play for f0s, f1s, f2s.  Whatever that is, we can imagine it
+will again consist of evaluating one of these three functions,
+multiplied now by possibly some 96th root of unity.
+
+We can start with some t = (-1+sqrt(d))/2 again, where we expect g(t)
+to have an interesting minimal polynomial.  We don't know which of
+f0s, f1s, or f2s to plug t into, nor which 96th root of unity to
+multiply by, but because we have computational power, we can avoid
+thinking too hard about this for just a moment and instead try them
+all:
+
+```
+from sage.libs.fplll.fplll import FP_LLL
+
+def f0s(t, prec=100):
+    q = e^(2*pi*I*t)
+    ans = q^(-1/96)
+    for n in range(1,prec):
+        ans = ans * (1+q^(n-(1/2)))^(1/2)
+    return ans
+
+def f1s(t, prec=100):
+    q = e^(2*pi*I*t)
+    ans = q^(-1/96)
+    for n in range(1,prec):
+        ans = ans * (1-q^(n-(1/2)))^(1/2)
+    return ans
+
+def f2s(t, prec=100):
+    q = e^(2*pi*I*t)
+    ans = (2^(1/4))*q^(1/48)
+    for n in range(1,prec):
+        ans = ans * (1+q^n)^(1/2)
+    return ans
+
+def try_all_f(d,deg=50,n=2^60):
+    a = 1
+    b = 1
+    c = (1-d)/4
+    z = e^(2*pi*I/96)
+    for ff in [(f0s,"f0"),(f1s,"f1"),(f2s,"f2")]:
+        y = N(ff[0]((-1+sqrt(d))/2), 100)
+        for k in range(96):
+            x = z^k*y
+            M = []
+            for i in range(deg+1):
+                M.append([1 if v == i else 0 for v in range(deg+1)]+[int(n*(x^i).real()+.5),int(n*(x^i).imag()+.5)])
+            M = matrix(M)
+            F=FP_LLL(M)
+            F.LLL()
+            l=F._sage_()[0][:-2]
+
+            R = ZZ['X']
+            X=R.gen()
+            fx = 0
+            for i in range(len(l)):
+                fx += X^i * l[i]
+            ans = N(fx(x),5)
+            if(ans.abs() < 0.0001):
+                print(k,ff[1],ans,fx.factor())
+```
+
+The function `try_all_f` will run through all combinations of f0s,
+f1s, f2s, and 96th roots of unity and compute minimal polynomials.
+Because of the use of n in our method, we expect that regardless of
+what we do, LLL will produce for any given x a polynomial m that, when
+you plug in x, gives a value around 1/n.  If m has an honest zero at x
+(rather than just approximating it), we expect to see m(x) much
+smaller than 1/n, so we only print out combinations of f_i and roots
+of unity for which m(x) has norm less than .0001.
+
+The results are kind of bizarre:
+
+```
+try_all_f(-7,20,100000)
+(0, 'f0', 0.000014 - 3.3e-6*I, (-1) * X * (X^19 - X^15 - 2*X^10 + X^9 - X^8 - X^6 + 2*X^4 + X + 1))
+(24, 'f0', 0.000031 + 0.000036*I, X * (X^19 - X^17 - 2*X^15 - X^13 - X^12 - X^9 - 2*X^7 + X^5 - X^4 - 2*X^3 - X^2 + 1))
+(48, 'f0', 0.000011 + 3.3e-6*I, (X - 1) * (X + 1)^2 * (X^17 + X^10 - 2*X^9 + X^8 - X^7 - X^6 - X^4 - X^2 + X - 1))
+(72, 'f0', -6.2e-6 - 0.000032*I, X * (X + 1) * (X^17 + X^11 + X^9 + 2*X^7 - X^6 + X^5 - 2*X^4 + 2*X^3 - X^2 + X - 1))
+(0, 'f1', 7.1e-30 - 1.4e-30*I, X * (X^16 - X^12 - X^8 - 2*X^4 + 4))
+(24, 'f1', 1.4e-30 + 7.1e-30*I, X * (X^16 - X^12 - X^8 - 2*X^4 + 4))
+(48, 'f1', -0.000023 - 0.000034*I, (X + 1) * (X^16 + X^14 - 2*X^12 + X^11 + X^10 + X^9 + X^7 - X^6 - X^3 + X^2 - X + 1))
+(72, 'f1', -1.4e-30 - 7.1e-30*I, X * (X^16 - X^12 - X^8 - 2*X^4 + 4))
+(0, 'f2', -0.000014 - 0.000032*I, (X + 1) * (X - 1)^5 * (X^2 + X + 1) * (X^4 + X^3 + X^2 + X + 1))
+(3, 'f2', -3.0e-29 + 1.8e-29*I, X^16 - X^8 + 1)
+(24, 'f2', 0.000024 + 0.000034*I, (X + 1)^2 * (X^16 - 2*X^15 + 2*X^14 - X^13 + X^11 - 2*X^10 + 2*X^9 - 3*X^8 + 2*X^7 - 2*X^6 + X^5 - X^3 + 2*X^2 - 2*X + 1))
+(48, 'f2', -0.000014 - 0.000032*I, (X - 1) * (X + 1)^5 * (X^2 - X + 1) * (X^4 - X^3 + X^2 - X + 1))
+(51, 'f2', -3.0e-29 + 1.8e-29*I, X^16 - X^8 + 1)
+(63, 'f2', -3.0e-29 + 1.8e-29*I, X^16 - X^8 + 1)
+(72, 'f2', 3.8e-6 - 2.0e-6*I, X^20 - X^19 + X^18 + X^17 + X^16 - 2*X^13 + X^10 - X^9 + X^8 - X^7 + X^5 - X^4 - X + 1)
+```
+
+In particular, which appears to be happening is that x^16 - x^8 + 1
+and x^16 - x^12 - x^8 - 2x^4 + 4 kill f2s(-1+sqrt(-7)/2) and
+f1s(-1+sqrt(-7)/2) respectively.
+
+### 20151211 Shimura Reciprocity
+
+Apparently Alice Gee, in [this
+paper](https://www.math.leidenuniv.nl/scripties/AliceGee.pdf),
+understands the construction in a principled way and can prove things
+about it using Shimura reciprocity.  I don't know what this theorem
+is, but the paper is added to the reading list.
